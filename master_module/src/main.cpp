@@ -1,18 +1,53 @@
 #include <Arduino.h>
+#include <Wire.h>
+#include "I2S_module.h"
 
-// put function declarations here:
-int myFunction(int, int);
+#define S 2
+#define high_V 4.2
+#define low_V 3.2
+#define high_T 60
+#define max_I 2
 
-void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+void discoverI2CSlaves();
+
+I2S_module modules[S];
+bool tooManyDevices = false;
+
+void setup()
+{
+  Wire.begin();
+  Serial.begin(9600);
+  discoverI2CSlaves();
 }
 
-void loop() {
+void loop()
+{
   // put your main code here, to run repeatedly:
 }
 
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+void discoverI2CSlaves()
+{
+  byte error, address;
+  int nDevices;
+
+  Serial.println("Scanning...");
+
+  nDevices = 0;
+  for (address = 1; address < 127; address++)
+  {
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+
+    if (error == 0)
+    {
+      if (nDevices >= S)
+      {
+        tooManyDevices = true;
+        continue;
+      }
+      modules[nDevices] = I2S_module(address);
+
+      nDevices++;
+    }
+  }
 }
